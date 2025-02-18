@@ -93,9 +93,9 @@ class PaymentViewSet(viewsets.ViewSet):
         state = request.data.get('state', "state")
         
         # Define callback URLs
-        success_url = f"https://juicycart-tropicals.onrender.com/order/payment/success/?user_id={user_id}&quantity={quantity}&product_id={product_id}"
-        fail_url = f"https://juicycart-tropicals.onrender.com/order/payment/fail/"
-        cancel_url = f"https://juicycart-tropicals.onrender.com/order/payment/cancel/"
+        success_url = f"https://juicy-cart-tropicals-backend.vercel.app/order/payment/success/?user_id={user_id}&quantity={quantity}&product_id={product_id}"
+        fail_url = f"https://juicy-cart-tropicals-backend.vercel.app/order/payment/fail/"
+        cancel_url = f"https://juicy-cart-tropicals-backend.vercel.app/order/payment/cancel/"
 
 
         # Create payment information payload
