@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from rest_framework import status  
+from django.shortcuts import render, redirect
 from rest_framework import views, viewsets
 from order.models import Order
 from order.serializers import OrderSerializer
@@ -10,6 +11,15 @@ from listing.models import Product
 from django.db import transaction
 from users.models import Customer, Seller
 from django.contrib.auth.models import User
+from sslcommerz_lib import SSLCOMMERZ
+from rest_framework.authentication import TokenAuthentication
+import random 
+import string
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+import uuid
+from django.conf import settings
+from rest_framework.decorators import action
 
 
 class SpecificOrder(BaseFilterBackend):
@@ -34,11 +44,99 @@ class OrderViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [SpecificOrder]
 
 
-class PlaceOrderAPIView(views.APIView):
-    def post(self, request):
-        product_id = request.data.get('product_id')
-        quantity = request.data.get('quantity')
-        user_id = request.data.get('user_id')
+class PaymentViewSet(viewsets.ViewSet):
+    @action(detail=False, methods=['post'])
+    def create_payment(self, request):
+        # SSLCommerz configuration
+        sslcz_settings = {
+            'store_id': 'juicy67a80e7052c5e',
+            'store_pass': 'juicy67a80e7052c5e@ssl',
+            'issandbox': True
+        }
+        sslcz = SSLCOMMERZ(sslcz_settings)
+        
+        # Generate unique transaction ID
+        tran_id = str(uuid.uuid4())[:10].replace('-', '').upper()
+
+        product_id = int(request.data.get('product_id', 1))
+        quantity = int(request.data.get('quantity', 1)) 
+        user_id = int(request.data.get('user_id', 3))
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({"error" : "Product does not found"})
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error" : "user not found"})
+
+        try:
+            customer = Customer.objects.get(user = user)
+        except Customer.DoesNotExist:
+            return Response({"error" : "Customer does not exist"})
+
+        
+        # Extract and set default request data
+        total_amount = product.price * quantity
+        currency = request.data.get('currency', "BDT")
+        name = user.username
+        email = user.email
+        phone_no = request.data.get('phone_no', "01700000000")
+        address_line_1 = customer.full_address
+        address_line_2 = request.data.get('address_line_2', "customer address")
+        city = request.data.get('city', "Dhaka")
+        country = request.data.get('country', "Bangladesh")
+        postal_code = request.data.get('postal_code', "14141")
+        payment_type = request.data.get('payment_type', "Online Payment")
+        state = request.data.get('state', "state")
+        
+        # Define callback URLs
+        success_url = f"https://juicycart-tropicals.onrender.com/order/payment/success/?user_id={user_id}&quantity={quantity}&product_id={product_id}"
+        fail_url = f"https://juicycart-tropicals.onrender.com/order/payment/fail/"
+        cancel_url = f"https://juicycart-tropicals.onrender.com/order/payment/cancel/"
+
+
+        # Create payment information payload
+        post_body = {
+            'total_amount': total_amount,
+            'currency': currency,
+            'tran_id': tran_id,
+            'success_url': success_url,
+            'fail_url': fail_url,
+            'cancel_url': cancel_url,
+            'emi_option': 0,
+            'cus_name': name,
+            'cus_email': email,
+            'cus_phone': phone_no,
+            'cus_add1': address_line_1,
+            'cus_city': city,
+            'cus_country': country,
+            'shipping_method': "NO",
+            'multi_card_name': "",
+            'num_of_item': quantity,
+            'product_name': product.name,
+            'product_category': "Test Category",
+            'product_profile': "general"
+        }
+
+        try:
+            response = sslcz.createSession(post_body)
+            if response.get('status') == 'SUCCESS' and 'GatewayPageURL' in response:
+                return Response({"url": response['GatewayPageURL']})
+            return Response({"error": "Unable to create payment session"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'])
+    def success(self, request):
+        user_id = request.query_params.get('user_id')
+        product_id = request.query_params.get('product_id')
+        quantity = request.query_params.get('quantity')
 
         try:
             user = User.objects.get(id=user_id)
@@ -46,7 +144,7 @@ class PlaceOrderAPIView(views.APIView):
             raise ValidationError({"error" : "User not found."})
 
         if not Customer.objects.filter(user=user).exists():
-            raise PermissionDenied("You do not have access to buy any product.")
+            raise ValidationError({"error" : "You do not have access to buy any product."})
 
         try:
             product = Product.objects.get(id=product_id)
@@ -69,8 +167,15 @@ class PlaceOrderAPIView(views.APIView):
             )
         serializer = OrderSerializer(order)
 
-        return Response({"success" : "Your order has been placed successfully!"})
+        return redirect(settings.SUCCESS_URL)
 
+    @action(detail=False, methods=['post'])
+    def cancel(self, request):
+        return redirect(settings.CANCEL_URL)
+    
+    @action(detail=False, methods=['post'])
+    def fail(self, request):
+        return redirect(settings.FAIL_URL)
 
 
 class CancelOrderAPIView(views.APIView):
