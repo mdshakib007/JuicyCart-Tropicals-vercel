@@ -1,0 +1,9 @@
+<html>
+<body>
+    <h1>Order Status Updated</h1>
+    <p>Dear <strong>{{ order.customer.user.first_name }}</strong>,</p>
+    <p>The status of your order for </strong>{{ order.product.name }}</strong> has been updated.</p>
+    <p>Order ID: <strong>{{ order.id }}</strong></p>
+    <p>New Status: <strong>{{ status }}</strong></p>
+</body>
+</html>

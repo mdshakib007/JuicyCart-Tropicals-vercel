@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .content {
+            padding: 20px;
+            line-height: 1.6;
+            color: #333333;
+        }
+        .content p {
+            margin: 0 0 10px;
+        }
+        .content a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            color: #ffffff;
+            background-color: #007bff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .content a:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="content">
+            <p>Hi there,</p>
+            <p>Thank you for registering with us. Please confirm your email address to complete your registration.</p>
+            <p>Click the button below to verify your email:</p>
+            <a href="{{ confirm_link }}" target="_blank">Verify Email</a>
+            <p>If you did not register for this account, please ignore this email.</p>
+            <p>Thank you,<br>The Support Team</p>
+        </div>
+        <div class="footer">
+            <small>&copy; {{ year }} JuicyCart Tropicals. All rights reserved.</small>
+            <small>This is an automated email. Please do not reply to this message.</small>
+        </div>
+    </div>
+</body>
+</html>
