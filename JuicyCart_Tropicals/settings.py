@@ -36,9 +36,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.127.0.0.1'
 ]
 
-SUCCESS_URL='https://mdshakib007.github.io/JuicyCart_Tropicals-Frontend/profile.html'
-CANCLE_URL='https://mdshakib007.github.io/JuicyCart_Tropicals-Frontend/profile.html'
-FAIL_URL='https://mdshakib007.github.io/JuicyCart_Tropicals-Frontend/profile.html'
+SUCCESS_URL='https://juicycart-tropicals.vercel.app/profile.html'
+CANCLE_URL='https://juicycart-tropicals.vercel.app/profile.html'
+FAIL_URL='https://juicycart-tropicals.vercel.app/profile.html'
 
 # Application definition
 
